@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Ticker</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <h1 class="text-center mt-4">Welcome to Chai's Django project</h1>
+    <a class="btn btn-primary mb-4" href="{% url 'wishlist_create' %}">Create a wishlist</a>
+    <div class="container row gap-3">
+      {% for wishlist in wishlists %}
+        <div class="card" style="width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title">{{ wishlist.user.username }}</h5>
+            <p class="card-text">{{ wishlist.wishlistname }}</p>
+            {% if wishlist.user == user %}
+              <a href="{% url "wishlist_edit" wishlist.id %}" class="btn btn-primary">Edit</a>
+              <a href="{% url "wishlist_delete" wishlist.id %}" class="btn btn-danger">Delete</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </body>
+</html>

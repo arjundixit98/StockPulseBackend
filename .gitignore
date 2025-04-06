@@ -1,0 +1,19 @@
+.env
+access_token.txt
+
+
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+__pycache__/
+
+# Virtual Environment
+venv/
+env/
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+
+# Environment variables
+.env
