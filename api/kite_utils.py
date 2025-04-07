@@ -7,36 +7,70 @@ env = environ.Env()
 environ.Env.read_env()  
 
 
-def get_kite_client():
+def is_token_valid(access_token):
+    api_key = env("KITE_API_KEY")
+    kite = KiteConnect(api_key=api_key)
+    kite.set_access_token(access_token)
+    
+    try:
+        # Try a lightweight call; profile() is a good candidate.
+        profile = kite.profile()
+        return True, profile
+    except KiteException as e:
+        # If there's an error (e.g., token expired or invalid), return False.
+        return False, str(e)
+    
+def generate_access_token(request_token):
+
+    try:
+        
+        api_key = env("KITE_API_KEY")
+        api_secret = env("KITE_API_SECRET")
+
+        kite = KiteConnect(api_key=api_key)
+        data = kite.generate_session(request_token, api_secret=api_secret)
+        access_token = data["access_token"]
+ 
+        return access_token
+        
+    except Exception as e:
+        print('Error occured while generating access token', e)
+        return None
 
 
-  api_key = env("KITE_API_KEY")
-  api_secret = env("KITE_API_SECRET")
-  access_token_file = "access_token.txt"
-  print(api_key)
+def generate_and_save_access_token(request_token):
 
-  kite = KiteConnect(api_key=api_key)
+    try:
+        
+        api_key = env("KITE_API_KEY")
+        api_secret = env("KITE_API_SECRET")
+        access_token_file = "access_token.txt"
 
-  # Load existing access token if available
-  if os.path.exists(access_token_file):
-      with open(access_token_file, "r") as f:
-          access_token = f.read().strip()
-          kite.set_access_token(access_token)
-  else:
-      # First-time login (manual step required)
-      print(kite.login_url())
-      request_token = input("Enter request token: ")
-      data = kite.generate_session(request_token, api_secret=api_secret)
-      access_token = data["access_token"]
+        if os.path.exists(access_token_file):
+            print('As access token already exists in fs, reading it as is')
+            with open(access_token_file, "r") as f:
+                access_token = f.read().strip()
+                return
 
-      # Save token for reuse during the same day
-      with open(access_token_file, "w") as f:
-          f.write(access_token)
+        kite = KiteConnect(api_key=api_key)
+        data = kite.generate_session(request_token, api_secret=api_secret)
+        access_token = data["access_token"]
+ 
+        # Save token for reuse during the same day
+        with open(access_token_file, "w") as f:
+            f.write(access_token)
+            return
+        
+    except Exception as e:
+        print('Error occured while generating access token', e)
+        return
 
-      kite.set_access_token(access_token)
-
-  print(kite.holdings()[1])
-  return kite
+  
+def get_kite_client(access_token):
+    api_key = env("KITE_API_KEY")
+    kite = KiteConnect(api_key=api_key)
+    kite.set_access_token(access_token)
+    return kite
 
 
   # Now you can make API calls
@@ -63,12 +97,12 @@ def get_zerodha_holding(tickers):
     return data
 
 
-def get_zerodha_holdings():
+def get_zerodha_holdings(access_token):
     '''
     Returns zerodha holdings as list of objects with each object representing a positions in current stock
     '''
     data = []
-    kite = get_kite_client()
+    kite = get_kite_client(access_token)
     holdings = kite.holdings()
     
     for holding in holdings:
