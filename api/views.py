@@ -94,6 +94,24 @@ class AuthCheckAPIView(APIView):
       return Response({"authenticated": False,"error": f'Error occured while checking authentication : {e}'})
 
 
+class LogoutAPIView(APIView):
+  
+
+  def post(self,request):
+    try:
+      
+      access_token = request.COOKIES.get("access_token")
+
+      if not access_token:
+        return Response({"error": "You are not logged in"}, status=401)
+
+      response = Response({"message": "Logged out"})
+      response.delete_cookie('access_token')
+      return response
+
+    except Exception as e:
+      return Response({'error': f'Error occured while logging out : {e}'}, status=401)
+
 
 
 class LoginAPIView(APIView):
