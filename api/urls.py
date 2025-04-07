@@ -13,6 +13,8 @@ urlpatterns = [
     path('wishlists', views.AllWishListsAPIView.as_view(), name="get-wishlists"),
     path('holding', views.StockHoldingAPIView.as_view(), name="get-holding"),
     path('holdings', views.StocksHoldingsAPIView.as_view(), name="get-holdings"),
+    path('login',  views.LoginAPIView.as_view(), name="login"),
+    path('auth-check',  views.AuthCheckAPIView.as_view(), name="auth-check")
 ]
 
 
