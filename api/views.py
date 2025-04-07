@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 import yfinance as yf
 from .utils import get_stock_data, get_stocks_data, get_stock_hist_data, get_stocks_hist_data
 
-from .kite_utils import get_zerodha_holdings, get_zerodha_holding
+from .kite_utils import get_zerodha_holdings, get_zerodha_holding, generate_access_token, is_token_valid
 from .models import WishList
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -57,17 +57,92 @@ class StocksHoldingsAPIView(APIView):
   def get(self, request):
     
     try:
+      #print('Cookies', request.COOKIES)
+      access_token = request.COOKIES.get("access_token")
+
+      if not access_token:
+        return Response({'error':'Unauthorized', 'data':[]}, status=401)
       
-      data = get_zerodha_holdings()
+      data = get_zerodha_holdings(access_token)
       if data:
-        return Response(data)
+        return Response({'status':'success', 'data':data})
       
-      return Response({"error": "Not enough data"}, status=400)
+      return Response({"error": "Not enough data", 'data':[]}, status=400)
     
     except Exception as e:
-      return Response({'error': f'{e}'}, status=status.HTTP_400_BAD_REQUEST)
+      return Response({'error': f'{e}', 'data' : []}, status=status.HTTP_400_BAD_REQUEST)
     
+
+
+class AuthCheckAPIView(APIView):
+  
+
+  def get(self,request):
+    try:
+      access_token = request.COOKIES.get("access_token")
+
+      if not access_token:
+        return Response({"authenticated": False, "error": "No token found"}, status=401)
+      valid, result = is_token_valid(access_token)
+
+      if valid:
+          return Response({"authenticated": True, "profile": result})
+      else:
+          return Response({"authenticated": False, "error": result}, status=401)
+
+    except Exception as e:
+      return Response({"authenticated": False,"error": f'Error occured while checking authentication : {e}'})
+
+
+
+
+class LoginAPIView(APIView):
+  
+
+  def get(self,request):
+    try:
+      status = request.GET.get("status")
+      request_token = request.GET.get("request_token")
+
+      if not status or not request_token:
+        return Response({'error': 'Either status or request token missing from query params'})
+      
+      if status != 'success':
+        return Response({'error': f'Status is not success'})
+
+
+      #generate and save token to file system
+      access_token = generate_access_token(request_token)
+
+      if not access_token:
+        return Response({"error": "Access token generation failed"})
+
+      print('Access token generated successfully')
+      
+      react_app_url = "http://localhost:8080/portfolio"
+      
+      response = redirect(react_app_url)
+      response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=86400,      # 1 day in seconds
+        httponly=True,      # Helps prevent XSS attacks
+        secure=False,        # Use only with HTTPS
+        #samesite='Lax'      # Adjust based on your requirements (Lax, Strict, None)
+      )
+      return response
     
+      #return Response({"message": "Access token generated successfully"})
+    
+      #return redirect(react_app_url)
+      #return Response({"message": "Access token generated successfully"}, status=400)
+
+    except Exception as e:
+      return Response({'error': f'Error occured while authentication : {e}'})
+
+
+
+
 
 class WishListCreateAPIView(APIView):
   def post(self, request):
