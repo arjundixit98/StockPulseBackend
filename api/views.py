@@ -8,6 +8,9 @@ from .kite_utils import get_zerodha_holdings, get_zerodha_holding, generate_acce
 from .models import WishList
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+import environ
+env = environ.Env()
+environ.Env.read_env()  
 
 
 
@@ -137,7 +140,8 @@ class LoginAPIView(APIView):
 
       print('Access token generated successfully')
       
-      react_app_url = "http://localhost:8080/portfolio"
+      react_app_url = env("REACT_FRONTEND_URL")+'/portfolio'
+      
       
       response = redirect(react_app_url)
       response.set_cookie(
