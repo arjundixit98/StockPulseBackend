@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import yfinance as yf
 from .utils import get_stock_data, get_stocks_data, get_stock_hist_data, get_stocks_hist_data
+from django.core.cache import cache
+import json
 
 from .kite_utils import get_zerodha_holdings, get_zerodha_holding, generate_access_token, is_token_valid
 from .models import WishList
@@ -13,32 +15,27 @@ env = environ.Env()
 environ.Env.read_env()  
 
 
-
-# class WishListAPIView(APIView):
-#   def get(self, request, wishlistname):
-#     try:
-#       wishlist = WishList.objects.get(wishlistname=wishlistname)
-#       if wishlist:
-#         return Response({"tickers":wishlist.tickers})
-      
-#     except Exception as e:
-#       return Response({"error": "Wishlist notfound"}, status=400)
-
-
-
-# class AllWishListsAPIView(APIView):
-#   def get(self, request):
-#     data = []
-#     wishlists = WishList.objects.all().order_by('-created_at')
-#     for wishlist in wishlists:
-#       data.append({"wishlistname":wishlist.wishlistname,
-#                    "tickers":wishlist.tickers})
-    
-#     if data:
-#       return Response(data)
-    
-#     return Response({"error": "No wishlists found"}, status=400)
-
+class StoreAPICredsView(APIView):
+  def post(self, request):
+    try:
+        data = json.loads(request.body)
+        user_api_key = data.get('api_key')
+        user_api_secret = data.get('api_secret')
+        
+        if not user_api_key or not user_api_secret:
+            return Response({'error': 'Missing credentials'}, status=400)
+        
+        # Use a unique key tied to the user/session (assuming session management)
+        # For example, using the session key:
+        session_key = request.session.session_key or request.session.create()
+        cache_key = f'api_creds_{session_key}'
+        
+        # Store in cache for 5 minutes (300 seconds)
+        cache.set(cache_key, {'api_key': user_api_key, 'api_secret': user_api_secret}, timeout=300)
+        
+        return Response({'message': 'Credentials stored successfully'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 class StockHoldingAPIView(APIView):
   def get(self, request):
@@ -86,7 +83,7 @@ class AuthCheckAPIView(APIView):
 
       if not access_token:
         return Response({"authenticated": False, "error": "No token found"}, status=401)
-      valid, result = is_token_valid(access_token)
+      valid, result = is_token_valid(access_token, request)
 
       if valid:
           return Response({"authenticated": True, "profile": result})
@@ -133,7 +130,7 @@ class LoginAPIView(APIView):
 
 
       #generate and save token to file system
-      access_token = generate_access_token(request_token)
+      access_token = generate_access_token(request_token, request)
 
       if not access_token:
         return Response({"error": "Access token generation failed"})

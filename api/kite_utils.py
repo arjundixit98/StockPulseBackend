@@ -3,12 +3,19 @@ from kiteconnect import KiteConnect
 import os
 from .utils import get_stock_data
 import environ
+from django.core.cache import cache
 env = environ.Env()
 environ.Env.read_env()  
 
 
-def is_token_valid(access_token):
-    api_key = env("KITE_API_KEY")
+def is_token_valid(access_token, request):
+    session_key = request.session.session_key
+    cache_key = f'api_creds_{session_key}'
+    user_creds = cache.get(cache_key)
+
+    api_key = user_creds.get('api_key')
+    
+    
     kite = KiteConnect(api_key=api_key)
     kite.set_access_token(access_token)
     
@@ -16,21 +23,31 @@ def is_token_valid(access_token):
         # Try a lightweight call; profile() is a good candidate.
         profile = kite.profile()
         return True, profile
-    except KiteException as e:
+    except Exception as e:
         # If there's an error (e.g., token expired or invalid), return False.
         return False, str(e)
     
-def generate_access_token(request_token):
+def generate_access_token(request_token, request):
 
     try:
-        
-        api_key = env("KITE_API_KEY")
-        api_secret = env("KITE_API_SECRET")
+        session_key = request.session.session_key
+        cache_key = f'api_creds_{session_key}'
+        user_creds = cache.get(cache_key)
+
+        if not user_creds:
+            print('API credentials not found or expired')
+            return None
+
+        api_key = user_creds.get('api_key')
+        api_secret = user_creds.get('api_secret')
+
+        # api_key = env("KITE_API_KEY")
+        # api_secret = env("KITE_API_SECRET")
 
         kite = KiteConnect(api_key=api_key)
         data = kite.generate_session(request_token, api_secret=api_secret)
         access_token = data["access_token"]
- 
+        
         return access_token
         
     except Exception as e:

@@ -15,7 +15,9 @@ urlpatterns = [
     path('holdings', views.StocksHoldingsAPIView.as_view(), name="get-holdings"),
     path('login',  views.LoginAPIView.as_view(), name="login"),
     path('logout',  views.LogoutAPIView.as_view(), name="logout"),
-    path('auth-check',  views.AuthCheckAPIView.as_view(), name="auth-check")
+    path('auth-check',  views.AuthCheckAPIView.as_view(), name="auth-check"),
+    path('store-api-creds',  views.StoreAPICredsView.as_view(), name="store-api-creds"),
+    
 ]
 
 
