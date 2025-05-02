@@ -82,7 +82,7 @@ class AuthCheckAPIView(APIView):
       access_token = request.COOKIES.get("access_token")
 
       if not access_token:
-        return Response({"authenticated": False, "error": "No token found"}, status=401)
+        return Response({"authenticated": False, "error": "No access token found"}, status=401)
       valid, result = is_token_valid(access_token, request)
 
       if valid:
@@ -129,7 +129,7 @@ class LoginAPIView(APIView):
         return Response({'error': f'Status is not success'})
 
 
-      #generate and save token to file system
+      #generate and send access token back as cookie
       access_token = generate_access_token(request_token, request)
 
       if not access_token:
@@ -150,12 +150,7 @@ class LoginAPIView(APIView):
         #samesite='Lax'      # Adjust based on your requirements (Lax, Strict, None)
       )
       return response
-    
-      #return Response({"message": "Access token generated successfully"})
-    
-      #return redirect(react_app_url)
-      #return Response({"message": "Access token generated successfully"}, status=400)
-
+   
     except Exception as e:
       return Response({'error': f'Error occured while authentication : {e}'})
 

@@ -28,10 +28,27 @@ DEBUG = True
 ALLOWED_HOSTS = ['localhost']
 
 import environ
+import os
+
 env = environ.Env()
 environ.Env.read_env()  
 
 
+
+# Set project root
+BASE_DIRR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Initialize environment
+env = environ.Env(
+    DEBUG=(bool, False)
+)
+
+# Read the appropriate .env file
+ENV = os.getenv("DJANGO_ENV", "local")  # local is default
+env_file = os.path.join(BASE_DIRR, f".env.{ENV}") if ENV != "local" else os.path.join(BASE_DIRR, ".env")
+
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
 
 # Application definition
 

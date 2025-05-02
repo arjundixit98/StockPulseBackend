@@ -9,22 +9,26 @@ environ.Env.read_env()
 
 
 def is_token_valid(access_token, request):
-    session_key = request.session.session_key
-    cache_key = f'api_creds_{session_key}'
-    user_creds = cache.get(cache_key)
-
-    api_key = user_creds.get('api_key')
-    
-    
-    kite = KiteConnect(api_key=api_key)
-    kite.set_access_token(access_token)
-    
     try:
+        session_key = request.session.session_key
+        cache_key = f'api_creds_{session_key}'
+        user_creds = cache.get(cache_key)
+        if not user_creds:
+            return False, 'User creds not present in cache'
+    
+        api_key = user_creds.get('api_key')
+
+        
+        kite = KiteConnect(api_key=api_key)
+        kite.set_access_token(access_token)
+    
+    
         # Try a lightweight call; profile() is a good candidate.
         profile = kite.profile()
         return True, profile
     except Exception as e:
         # If there's an error (e.g., token expired or invalid), return False.
+        print('Error occured while validating token', str(e))
         return False, str(e)
     
 def generate_access_token(request_token, request):
