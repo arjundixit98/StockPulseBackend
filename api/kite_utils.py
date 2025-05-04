@@ -45,9 +45,6 @@ def generate_access_token(request_token, request):
         api_key = user_creds.get('api_key')
         api_secret = user_creds.get('api_secret')
 
-        # api_key = env("KITE_API_KEY")
-        # api_secret = env("KITE_API_SECRET")
-
         kite = KiteConnect(api_key=api_key)
         data = kite.generate_session(request_token, api_secret=api_secret)
         access_token = data["access_token"]
@@ -93,9 +90,6 @@ def get_kite_client(access_token):
     kite.set_access_token(access_token)
     return kite
 
-
-  # Now you can make API calls
-  #print(kite.holdings()[0])
 
 def getFromHoldingObject(holding, attribute):
     return holding.get(attribute)

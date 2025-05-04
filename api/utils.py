@@ -103,11 +103,3 @@ def get_stocks_data(tickers_list):
         data.append(get_stock_data_from_object(ticker, tickerObj))
 
     return data
-    # data = []
-    # for ticker in tickers:
-    #     stock_data = get_stock_data(ticker)
-    #     data.append(stock_data)
-
-    # return data
-
-#print(get_stock_data('TITAN.NS'))
