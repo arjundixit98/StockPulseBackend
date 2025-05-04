@@ -25,14 +25,13 @@ SECRET_KEY = 'django-insecure-dz334%99zz^hg*o(y3#721-7$d0#uyb*&8&=q@+8si10__52mr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost','api.arjundixit.dev']
 
 import environ
 import os
 
 env = environ.Env()
 environ.Env.read_env()  
-
 
 
 # Set project root
